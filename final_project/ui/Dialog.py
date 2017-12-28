@@ -40,6 +40,9 @@ class Dialog(QDialog, Ui_Dialog):
         for i in digits:
             i.clicked.connect(self.digitClicked)
         #self.one.clicked.connect(self.digitClicked)
+        self.timesButton.clicked.connect(self.multiplicativeOperatorClicked)
+        
+        self.pendingMultiplicativeOperator = ''
 
     def digitClicked(self):
         clickedButton = self.sender()
@@ -65,8 +68,22 @@ class Dialog(QDialog, Ui_Dialog):
         pass
         
     def multiplicativeOperatorClicked(self):
-        '''乘或除按下後進行的處理方法'''
-        pass
+        clickedButton = self.sender()
+        clickedOperator = clickedButton.text()
+        operand = float(self.display.text())
+
+        if self.pendingMultiplicativeOperator:
+            if not self.calculate(operand, self.pendingMultiplicativeOperator):
+                self.abortOperation()
+                return
+
+            self.display.setText(str(self.factorSoFar))
+        else:
+            self.factorSoFar = operand
+
+        self.pendingMultiplicativeOperator = clickedOperator
+        self.waitingForOperand = True
+        
         
     def equalClicked(self):
         '''等號按下後的處理方法'''
@@ -119,6 +136,16 @@ class Dialog(QDialog, Ui_Dialog):
         '''中斷運算'''
         pass
         
-    def calculate(self):
+    def calculate(self, rightOperand, pendingOperator):
         '''計算'''
-        pass
+        #pass
+        if pendingOperator == "*":
+            self.factorSoFar *= rightOperand
+ 
+        if pendingOperator == "/":
+            if rightOperand == 0.0:
+                return False
+ 
+            self.factorSoFar /= rightOperand
+ 
+        return True
