@@ -24,8 +24,6 @@ class Dialog(QDialog, Ui_Dialog):
         super(Dialog, self).__init__(parent)
         self.setupUi(self)
         '''以下為使用者自行編寫程式碼區'''
-        #啟動時，等待輸入運算數
-        self.waitingForOperand = True
         
         #顯示幕起始
         self.display.setText('0')
@@ -40,10 +38,30 @@ class Dialog(QDialog, Ui_Dialog):
         for i in digits:
             i.clicked.connect(self.digitClicked)
         #self.one.clicked.connect(self.digitClicked)
-        self.timesButton.clicked.connect(self.multiplicativeOperatorClicked)
+        
+        multiply_divide = [self.timesButton,  self.divisionButton] 
+        
+        for i in multiply_divide:
+            i.clicked.connect(self.multiplicativeOperatorClicked)
+            
+        plus_minus = [self.plusButton, self.minusButton]  
+        
+        for i in plus_minus:
+            i.clicked.connect (self.additiveOperatorClicked)        
+        
+        self.equalButton.clicked.connect(self.equalClicked)
+        
+        self.pendingAdditiveOperator = ''
+        
+        self.sumSoFar = 0.0
+        
+        self.waitingForOperand = True
         
         self.pendingMultiplicativeOperator = ''
-
+        
+        self.factorSoFar = 0.0
+ 
+        
     def digitClicked(self):
         clickedButton = self.sender()
         digitValue = int(clickedButton.text())
@@ -65,7 +83,32 @@ class Dialog(QDialog, Ui_Dialog):
         
     def additiveOperatorClicked(self):
         '''加或減按下後進行的處理方法'''
-        pass
+      #  pass
+        clickedButton = self.sender()
+        clickedOperator = clickedButton.text()
+        operand = float(self.display.text())
+
+        if self.pendingMultiplicativeOperator:
+            if not self.calculate(operand, self.pendingMultiplicativeOperator):
+                self.abortOperation()
+                return
+
+            self.display.setText(str(self.factorSoFar))
+            operand = self.factorSoFar
+            self.factorSoFar = 0.0
+            self.pendingMultiplicativeOperator = ''
+
+        if self.pendingAdditiveOperator:
+            if not self.calculate(operand, self.pendingAdditiveOperator):
+                self.abortOperation()
+                return
+
+            self.display.setText(str(self.sumSoFar))
+        else:
+            self.sumSoFar = operand
+
+        self.pendingAdditiveOperator = clickedOperator
+        self.waitingForOperand = True      
         
     def multiplicativeOperatorClicked(self):
         clickedButton = self.sender()
@@ -82,13 +125,36 @@ class Dialog(QDialog, Ui_Dialog):
             self.factorSoFar = operand
 
         self.pendingMultiplicativeOperator = clickedOperator
-        self.waitingForOperand = True
-        
+        self.waitingForOperand = True       
         
     def equalClicked(self):
         '''等號按下後的處理方法'''
-        pass
-        
+        #pass
+        operand = float(self.display.text())
+
+        if self.pendingMultiplicativeOperator:
+            if not self.calculate(operand, self.pendingMultiplicativeOperator):
+                self.abortOperation()
+                return
+
+            operand = self.factorSoFar
+            self.factorSoFar = 0.0
+            self.pendingMultiplicativeOperator = ''
+
+        if self.pendingAdditiveOperator:
+            if not self.calculate(operand, self.pendingAdditiveOperator):
+                self.abortOperation()
+                return
+
+            self.pendingAdditiveOperator = ''
+        else:
+            self.sumSoFar = operand
+
+        self.display.setText(str(self.sumSoFar))
+        self.sumSoFar = 0.0
+        self.waitingForOperand = True  
+     
+    
     def pointClicked(self):
         '''小數點按下後的處理方法'''
         pass
@@ -139,9 +205,12 @@ class Dialog(QDialog, Ui_Dialog):
     def calculate(self, rightOperand, pendingOperator):
         '''計算'''
         #pass
+        if pendingOperator == "+":
+            self.sumSoFar += rightOperand
+        if pendingOperator == "-":
+            self.sumSoFar -= rightOperand
         if pendingOperator == "*":
             self.factorSoFar *= rightOperand
- 
         if pendingOperator == "/":
             if rightOperand == 0.0:
                 return False
