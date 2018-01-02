@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QDialog
 
 from .Ui_Dialog import Ui_Dialog
 
+import math
 
 class Dialog(QDialog, Ui_Dialog):
     """
@@ -53,6 +54,8 @@ class Dialog(QDialog, Ui_Dialog):
         
         self.pendingAdditiveOperator = ''
         
+        self.clearAllButton.clicked.connect(self.clearAll)
+        
         self.sumSoFar = 0.0
         
         self.waitingForOperand = True
@@ -60,6 +63,10 @@ class Dialog(QDialog, Ui_Dialog):
         self.pendingMultiplicativeOperator = ''
         
         self.factorSoFar = 0.0
+        
+        unaryOperator = [self.squareRootButton, self.powerButton,  self.reciprocalButton ]
+        for i in unaryOperator:
+            i.clicked.connect(self.unaryOperatorClicked)
  
         
     def digitClicked(self):
@@ -76,10 +83,32 @@ class Dialog(QDialog, Ui_Dialog):
             self.waitingForOperand = False
             
         self.display.setText(self.display.text() + str(digitValue))
-    
+
+
     def unaryOperatorClicked(self):
         '''單一運算元按下後處理方法'''
-        pass
+        #pass
+        clickedButton = self.sender()
+        clickedOperator = clickedButton.text()
+        operand = float(self.display.text())
+ 
+        if clickedOperator == "Sqrt":
+            if operand < 0.0:
+                self.abortOperation()
+                return
+ 
+            result = math.sqrt(operand)
+        elif clickedOperator == "X^2":
+            result = math.pow(operand, 2.0)
+        elif clickedOperator == "1/x":
+            if operand == 0.0:
+                self.abortOperation()
+                return
+ 
+            result = 1.0 / operand
+ 
+        self.display.setText(str(result))
+        self.waitingForOperand = True
         
     def additiveOperatorClicked(self):
         '''加或減按下後進行的處理方法'''
@@ -176,8 +205,13 @@ class Dialog(QDialog, Ui_Dialog):
         
     def clearAll(self):
         '''全部清除鍵按下後的處理方法'''
-        pass
-        
+        #pass
+        self.sumSoFar = 0.0
+        self.factorSoFar = 0.0
+        self.pendingAdditiveOperator = ''
+        self.pendingMultiplicativeOperator = ''
+        self.display.setText('0')
+        self.waitingForOperand = True
     def clearMemory(self):
         '''清除記憶體鍵按下後的處理方法'''
         pass
