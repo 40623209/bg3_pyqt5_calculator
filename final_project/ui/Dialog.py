@@ -280,7 +280,10 @@ class Dialog(QDialog, Ui_Dialog):
         
     def createButton(self):
         ''' 建立按鍵處理方法, 以 Qt Designer 建立對話框時, 不需要此方法'''
-        pass
+        #pass
+        button = Button(text)
+        button.clicked.connect(member)
+        return button
         
     def abortOperation(self):
         '''中斷運算'''
